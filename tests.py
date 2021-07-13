@@ -142,9 +142,10 @@ def test_value_iteration():
                      ((3, 'c'), 6.794664584556008),
                      ((2, 'c'), 5.962924188028282)])
     for k in qvi.q:
-        assert((qvi.q[k] - expected[k]) < 1.0e-5)
+        assert(abs(qvi.q[k] - expected[k]) < 1.0e-5)
     print("Test passed!")
 
+test_value_iteration()
 
 def test_q_em():
     tiny = MDP([0, 1, 2, 3], ['b', 'c'], tiny_transition, tiny_reward, 0.9)
@@ -154,6 +155,8 @@ def test_q_em():
     assert(np.allclose([q_em(tiny, 0, 'c', 3)], [1.4103]))
     assert(np.allclose([q_em(tiny, 2, 'b', 3)], [1.9116000000000002]))
     print("Tests passed!")
+
+test_q_em()
 
 ###################################################
 # Call your tests below

@@ -2,6 +2,21 @@ import pdb
 from dist import uniform_dist, delta_dist, mixture_dist
 from util import *
 import random
+import numpy as np
+
+class TabularQ:
+    def __init__(self, states, actions):
+        self.actions = actions
+        self.states = states
+        self.q = dict([((s, a), 0.0) for s in states for a in actions])
+    def copy(self):
+        q_copy = TabularQ(self.states, self.actions)
+        q_copy.q.update(self.q)
+        return q_copy
+    def set(self, s, a, v):
+        self.q[(s,a)] = v
+    def get(self, s, a):
+        return self.q[(s,a)]
 
 class MDP:
     # Needs the following attributes:
@@ -56,13 +71,50 @@ class MDP:
 def value_iteration(mdp, q, eps = 0.01, interactive_fn = None,
                     max_iters = 10000):
     # Your code here
-    pass
+    #series = q.series
+    #actions = q.actions
+    gamma = mdp.discount_factor
+    R = mdp.reward_fn
+    T = mdp.transition_model
+
+    #Assumes that Q has already been initialised
+    while True:
+
+        q_new = q.copy()
+        for s in q.states:
+            for a in q.actions:
+                expected_reward = 0
+                for s_ in q.states:
+                    #expected_reward += T(s,a).prob(s_) * R(s_,greedy(q,s_))
+                    max_q_a = max([q.get(s_,a) for a in q.actions])
+                    expected_reward += T(s,a).prob(s_) * max_q_a
+                new_value = R(s,a) +gamma*expected_reward
+                q_new.set(s,a,new_value)
+
+        #find the maximum difference between old and new values
+        diffs = [abs(q.get(s,a)-q_new.get(s,a)) for s in q.states for a in q.actions]
+        if max(diffs) < eps:
+            return q_new
+        else:
+            q = q_new.copy()
 
 # Compute the q value of action a in state s with horizon h, using
 # expectimax
 def q_em(mdp, s, a, h):
     # Your code here
-    pass
+    gamma = mdp.discount_factor
+    R = mdp.reward_fn
+    T = mdp.transition_model
+
+    #base cases
+    if h==0: 
+        return 0
+    elif h==1: 
+        return R(s,a)
+    else:
+        sum_term = sum([T(s, a).prob(s_)* q_em(mdp, s_, a, h-1) for s_ in T(s,a).support()])
+        return R(s,a) + gamma*sum_term
+
 
 # Given a state, return the value of that state, with respect to the
 # current definition of the q function
@@ -77,7 +129,13 @@ def value(q, s):
     10
     """
     # Your code here
-    pass
+    return max(q.get(s,a)for a in q.actions)
+
+
+q = TabularQ([0,1,2,3],['b','c'])
+q.set(0, 'b', 5)
+q.set(0, 'c', 10)
+print(value(q,0))
 
 # Given a state, return the action that is greedy with reespect to the
 # current definition of the q function
@@ -94,7 +152,16 @@ def greedy(q, s):
     'b'
     """
     # Your code here
-    pass
+    rewards = [q.get(s,a)for a in q.actions]
+    return q.actions[np.argmax(rewards)]
+
+q = TabularQ([0,1,2,3],['b','c'])
+q.set(0, 'b', 5)
+q.set(0, 'c', 10)
+q.set(1, 'b', 2)
+print(greedy(q, 0))
+print(greedy(q, 1))
+
 
 def epsilon_greedy(q, s, eps = 0.5):
     """ Return an action.
@@ -111,21 +178,9 @@ def epsilon_greedy(q, s, eps = 0.5):
     """
     if random.random() < eps:  # True with prob eps, random action
         # Your code here
-        pass
+        return uniform_dist(q.actions).draw()
     else:
-        # Your code here
-        pass
+        return greedy(q, s)
+        
 
-class TabularQ:
-    def __init__(self, states, actions):
-        self.actions = actions
-        self.states = states
-        self.q = dict([((s, a), 0.0) for s in states for a in actions])
-    def copy(self):
-        q_copy = TabularQ(self.states, self.actions)
-        q_copy.q.update(self.q)
-        return q_copy
-    def set(self, s, a, v):
-        self.q[(s,a)] = v
-    def get(self, s, a):
-        return self.q[(s,a)]
+
