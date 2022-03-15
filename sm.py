@@ -1,5 +1,27 @@
 from util import *
 
+# Takes a list of numbers and returns a column vector:  n x 1
+def cv(value_list):
+    """ Return a d x 1 np array.
+        value_list is a python list of values of length d.
+
+    >>> cv([1,2,3])
+    array([[1],
+           [2],
+           [3]])
+    """
+    return np.transpose(rv(value_list))
+
+# Takes a list of numbers and returns a row vector: 1 x n
+def rv(value_list):
+    """ Return a 1 x d np array.
+        value_list is a python list of values of length d.
+
+    >>> rv([1,2,3])
+    array([[1, 2, 3]])
+    """
+    return np.array([value_list])
+
 class SM:
     start_state = None  # default start state
 
@@ -88,15 +110,28 @@ class Reverser(SM):
 class RNN(SM):
     def __init__(self, Wsx, Wss, Wo, Wss_0, Wo_0, f1, f2):
         # Your code here
-        pass
+        self.Wsx = Wsx
+        self.Wss = Wss
+        self.Wo = Wo
+        self.Wss_0 = Wss_0 
+        self.Wo_0 = Wo_0 
+        self.f1 = f1 
+        self.f2 = f2
 
-    def transition_fn(self, s, i):
-        # Your code here
-        pass
+        #states need to be as long as Wss is wide
+        self.start_state = cv(np.transpose(np.zeros(len(self.Wss)))) #This is used during the transduce test phase
+        self.st = self.start_state #was None
+        self.st_1 = self.start_state #was None
+        
+
+    def transition_fn(self, s, x):
+        self.st = self.f1(np.dot(self.Wss,s) + np.dot(self.Wsx,x)+self.Wss_0)
+        return self.st
 
     def output_fn(self, s):
-        # Your code here
-        pass
+        return self.f2(np.dot(self.Wo,self.st)+self.Wo_0)
+
+
 
 sm = Accumulator()
 

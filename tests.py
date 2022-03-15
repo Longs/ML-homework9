@@ -82,6 +82,8 @@ def test_rnn():
     assert(np.allclose(expected, rnn.transduce(in1)))
     print("Test passed!")
 
+test_rnn()
+
 
 def test_acc_sign_rnn(acc_sign_rnn):
     res = acc_sign_rnn.transduce([-1, -2, 2, 3, -3, 1])
